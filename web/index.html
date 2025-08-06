@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Editor</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    textarea { width: 100%; height: 300px; }
+    #preview { border: 1px solid #ccc; padding: 1em; margin-top: 1em; background: #fafafa; }
+    .file-controls { margin-bottom: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Markdown Editor</h1>
+  <div class="file-controls">
+    <input type="file" id="fileInput" accept=".md,.markdown,.txt">
+    <button id="downloadBtn">ダウンロード</button>
+  </div>
+  <textarea id="editor" placeholder="ここにMarkdownを入力してください..."></textarea>
+  <div id="preview"></div>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const fileInput = document.getElementById('fileInput');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    function updatePreview() {
+      preview.innerHTML = marked.parse(editor.value);
+    }
+    editor.addEventListener('input', updatePreview);
+    updatePreview();
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        editor.value = ev.target.result;
+        updatePreview();
+      };
+      reader.readAsText(file);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([editor.value], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'memo.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
