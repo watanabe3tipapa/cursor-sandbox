@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Markdown Editor - Cursor-sandbox</title>
+  <title>Markdown Editor</title>
   <style>
     body { font-family: sans-serif; margin: 2em; }
     textarea { width: 100%; height: 300px; }
@@ -19,6 +19,14 @@
   </div>
   <textarea id="editor" placeholder="ここにMarkdownを入力してください..."></textarea>
   <div id="preview"></div>
+  <div class="github-upload" style="margin: 2em 0; padding: 1em; border: 1px solid #eee; background: #f9f9f9;">
+    <h2>GitHubにアップロード</h2>
+    <label>Personal Access Token: <input type="password" id="githubToken" style="width: 300px;"></label><br>
+    <label>ファイルパス（例: docs/新規メモ.md）: <input type="text" id="githubPath" style="width: 300px;" placeholder="docs/新規メモ.md"></label><br>
+    <button id="githubUploadBtn">GitHubにアップロード</button>
+    <span id="githubUploadStatus" style="margin-left:1em;"></span>
+    <div style="font-size:0.9em; color:#888; margin-top:0.5em;">※Tokenはrepo権限付きで発行してください。<br>※ファイルはmainブランチに直接コミットされます。</div>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     const editor = document.getElementById('editor');
@@ -51,6 +59,58 @@
       a.download = 'memo.md';
       a.click();
       URL.revokeObjectURL(url);
+    });
+
+    // --- GitHubアップロード機能 ---
+    const githubToken = document.getElementById('githubToken');
+    const githubPath = document.getElementById('githubPath');
+    const githubUploadBtn = document.getElementById('githubUploadBtn');
+    const githubUploadStatus = document.getElementById('githubUploadStatus');
+
+    githubUploadBtn.addEventListener('click', async () => {
+      const token = githubToken.value.trim();
+      const path = githubPath.value.trim();
+      if (!token || !path) {
+        githubUploadStatus.textContent = 'Tokenとパスを入力してください';
+        githubUploadStatus.style.color = 'red';
+        return;
+      }
+      githubUploadStatus.textContent = 'アップロード中...';
+      githubUploadStatus.style.color = '#333';
+      const owner = 'watanabe3tipapa';
+      const repo = 'cursor-sandbox';
+      const branch = 'main';
+      let sha = undefined;
+      try {
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`);
+        if (res.ok) {
+          const data = await res.json();
+          sha = data.sha;
+        }
+      } catch (e) {}
+      const content = btoa(unescape(encodeURIComponent(editor.value)));
+      const body = {
+        message: `update ${path} from web editor`,
+        content,
+        branch,
+        sha
+      };
+      const result = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify(body)
+      });
+      if (result.ok) {
+        githubUploadStatus.textContent = 'アップロード成功！';
+        githubUploadStatus.style.color = 'green';
+      } else {
+        const err = await result.json();
+        githubUploadStatus.textContent = '失敗: ' + (err.message || 'エラー');
+        githubUploadStatus.style.color = 'red';
+      }
     });
   </script>
 </body>
