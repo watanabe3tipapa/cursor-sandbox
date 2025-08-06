@@ -25,6 +25,13 @@
     <ul id="docsFileList" style="margin-top:1em;"></ul>
     <div style="font-size:0.9em; color:#888;">※GitHub APIを利用して取得します。Publicリポジトリの場合はToken不要。</div>
   </div>
+
+  <div class="memo-list" style="margin:2em 0; padding:1em; border:1px solid #eee; background:#f3f3f3;">
+    <h2>/memo ファイル一覧</h2>
+    <button id="refreshMemoList">最新の一覧を取得</button>
+    <ul id="memoFileList" style="margin-top:1em;"></ul>
+    <div style="font-size:0.9em; color:#888;">※GitHub APIを利用して取得します。Publicリポジトリの場合はToken不要。</div>
+  </div>
   <div class="github-upload" style="margin: 2em 0; padding: 1em; border: 1px solid #eee; background: #f9f9f9;">
     <h2>GitHubにアップロード</h2>
     <label>Personal Access Token: <input type="password" id="githubToken" style="width: 300px;"></label><br>
@@ -157,6 +164,45 @@
     }
     refreshDocsList.addEventListener('click', fetchDocsList);
     fetchDocsList();
+
+    // --- /memo ファイル一覧取得 ---
+    const memoFileList = document.getElementById('memoFileList');
+    const refreshMemoList = document.getElementById('refreshMemoList');
+    async function fetchMemoList() {
+      memoFileList.innerHTML = '<li>取得中...</li>';
+      const owner = 'watanabe3tipapa';
+      const repo = 'cursor-sandbox';
+      const path = 'memo';
+      let url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('APIエラー');
+        const files = await res.json();
+        memoFileList.innerHTML = '';
+        files.filter(f => f.type === 'file' && !f.name.startsWith('.')).forEach(f => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = '#';
+          a.textContent = f.name;
+          a.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const fileRes = await fetch(f.download_url);
+            if (fileRes.ok) {
+              const text = await fileRes.text();
+              editor.value = text;
+              updatePreview();
+            }
+          });
+          li.appendChild(a);
+          memoFileList.appendChild(li);
+        });
+        if (memoFileList.innerHTML === '') memoFileList.innerHTML = '<li>ファイルがありません</li>';
+      } catch (e) {
+        memoFileList.innerHTML = '<li>取得失敗</li>';
+      }
+    }
+    refreshMemoList.addEventListener('click', fetchMemoList);
+    fetchMemoList();
   </script>
 </body>
 </html>
