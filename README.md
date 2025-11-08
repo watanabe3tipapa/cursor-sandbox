@@ -1,5 +1,8 @@
 # cursor-sandbox
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Version](https://img.shields.io/badge/version-0.1.0-green.svg)
+
 ## 🗂️docs ディレクトリについて
 
 このリポジトリでは、自由記述のマークダウンファイルを `docs/` ディレクトリに格納してください。
