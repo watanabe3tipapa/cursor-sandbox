@@ -12,4 +12,8 @@ git clone https://github.com/watanabe3tipapa/cursor-sandbox.git
 
 > **もちろんこのリポジトリをFORKして利用することも可能です。**
 
+
+GitHub Pages ではこのdocs/を静的サイトとして公開しています。
+
+
 ---
